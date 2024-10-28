@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+    .div{
+        display: grid;
+        padding: 50px;
+        margin-left: 500px;
+        margin-top: 150px;
+     align-items: center;
+       width:200px;
+       color: white;
+       background-color: rgb(230, 61, 117);
+       border-radius: 20px;
+       box-shadow: 10px 10px 5px gray;
+    }
+    .btn{
+        height: 30px;
+        background-color: rgb(248, 250, 245);
+        border-radius: 10px;
+
+    }
+    input{
+border-radius: 8px;
+height:20px;
+    }
+</style>
+</head>
+<body>
+    <div  class="div">
+        <h3>Palindrome</h3>
+        <!-- <label for="">M</label> -->
+      <input  id="palindrome" placeholder="Enter the String" rows="4" cols="50" > <br>
+      <button class="btn" onclick='palindrome()'>Submit</button><br>
+      <div id="result"></div>
+    </div>
+    <script src = "task3.js"></script>
+</body>
+</html>

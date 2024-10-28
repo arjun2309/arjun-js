@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Attendance Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f6f8;
+        }
+
+        header {
+            background-color: #007bff;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        main {
+            margin: 20px auto;
+            padding: 20px;
+            width: 90%;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        section {
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        td {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 16px;
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="number"], input[type="date"], input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .employee-list, .attendance-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .employee-card {
+            background-color: #f1f1f1;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .employee-card p {
+            margin: 5px 0;
+        }
+
+        .btn-actions {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    Employee Attendance Management System
+</header>
+
+<main>
+    <!-- Employee List Section -->
+    <section>
+        <h2>Employee List</h2>
+        <div class="employee-list" id="employeeList">
+            <!-- Employees will be dynamically loaded here -->
+        </div>
+    </section>
+
+    <!-- Attendance List Section -->
+    <section>
+        <h2>Attendance List</h2>
+        <div class="attendance-list" id="attendanceList">
+            <!-- Attendance will be dynamically loaded here -->
+        </div>
+    </section>
+
+    <!-- Check-In and Check-Out Section -->
+    <section>
+        <h2>Check-In / Check-Out</h2>
+        <div class="form-group">
+            <label for="checkInOutEmployeeId">Employee ID:</label>
+            <input type="number" id="checkInOutEmployeeId" placeholder="Enter Employee ID">
+        </div>
+        <div class="btn-actions">
+            <button onclick="checkIn()">Check-In</button>
+            <button onclick="checkOut()">Check-Out</button>
+        </div>
+    </section>
+
+    <!-- Mark Absent Section -->
+    <section>
+        <h2>Mark Absent</h2>
+        <div class="form-group">
+            <label for="absentEmployeeId">Employee ID:</label>
+            <input type="number" id="absentEmployeeId" placeholder="Enter Employee ID">
+        </div>
+        <div class="form-group">
+            <label for="absentDate">Absent Date:</label>
+            <input type="date" id="absentDate">
+        </div>
+        <button onclick="markAbsent()">Mark Absent</button>
+    </section>
+
+    <!-- Monthly Attendance Summary Section -->
+    <section>
+        <h2>Monthly Attendance Summary</h2>
+        <div class="form-group">
+            <label for="summaryEmployeeId">Employee ID:</label>
+            <input type="number" id="summaryEmployeeId" placeholder="Enter Employee ID">
+        </div>
+        <div class="form-group">
+            <label for="year">Year:</label>
+            <input type="number" id="year" placeholder="Enter Year (e.g., 2023)">
+        </div>
+        <div class="form-group">
+            <label for="month">Month:</label>
+            <input type="number" id="month" placeholder="Enter Month (1-12)">
+        </div>
+        <button onclick="getMonthlyAttendance()">Get Summary</button>
+
+        <table id="summaryTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Present Days</th>
+                    <th>Absent Days</th>
+                    <th>Total Days</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="presentDays"></td>
+                    <td id="absentDays"></td>
+                    <td id="totalDays"></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<script>
+    const apiBaseUrl = 'http://localhost:8080/attendance'; // Update this to match your backend URL
+
+    function fetchEmployees() {
+        fetch(`${apiBaseUrl}/employees`)
+            .then(response => response.json())
+            .then(data => {
+                const employeeList = document.getElementById('employeeList');
+                employeeList.innerHTML = '';
+                data.forEach(employee => {
+                    employeeList.innerHTML += `
+                        <div class="employee-card">
+                            <p><strong>ID:</strong> ${employee.id}</p>
+                            <p><strong>Name:</strong> ${employee.name}</p>
+                            <p><strong>Role:</strong> ${employee.role}</p>
+                        </div>
+                    `;
+                });
+            });
+    }
+
+    function fetchAttendance() {
+        fetch(`${apiBaseUrl}/attendancelist`)
+            .then(response => response.json())
+            .then(data => {
+                const attendanceList = document.getElementById('attendanceList');
+                attendanceList.innerHTML = '';
+                data.forEach(attendance => {
+                    attendanceList.innerHTML += `
+                        <div class="employee-card">
+                            <p><strong>Employee ID:</strong> ${attendance.employeeId}</p>
+                            <p><strong>Check-In:</strong> ${attendance.checkIn}</p>
+                            <p><strong>Check-Out:</strong> ${attendance.checkOut}</p>
+                            <p><strong>Reason:</strong> ${attendance.reason || 'N/A'}</p>
+                        </div>
+                    `;
+                });
+            });
+    }
+
+    function checkIn() {
+        const employeeId = document.getElementById('checkInOutEmployeeId').value;
+        fetch(`${apiBaseUrl}/checkin/${employeeId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(() => alert('Check-in successful!'))
+        .catch(error => console.error('Error:', error));
+    }
+
+    function checkOut() {
+        const employeeId = document.getElementById('checkInOutEmployeeId').value;
+        fetch(`${apiBaseUrl}/checkout/${employeeId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(() => alert('Check-out successful!'))
+        .catch(error => console.error('Error:', error));
+    }
+
+    function markAbsent() {
+        const employeeId = document.getElementById('absentEmployeeId').value;
+        const date = document.getElementById('absentDate').value;
+        const params = new URLSearchParams({ date });
+
+        fetch(`${apiBaseUrl}/absent/${employeeId}?${params}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(() => alert('Marked absent successfully!'))
+        .catch(error => console.error('Error:', error));
+    }
+
+    function getMonthlyAttendance() {
+        const employeeId = document.getElementById('summaryEmployeeId').value;
+        const year = document.getElementById('year').value;
+        const month = document.getElementById('month').value;
+
+        fetch(`${apiBaseUrl}/monthly/${employeeId}/${year}/${month}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('summaryTable').style.display = 'table';
+            document.getElementById('presentDays').innerText = data.presentDays;
+            document.getElementById('absentDays').innerText = data.absentDays;
+            document.getElementById('totalDays').innerText = data.totalDays;
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Fetch employee and attendance data on page load
+    fetchEmployees();
+    fetchAttendance();
+</script>
+
+</body>
+</html>
